@@ -20,7 +20,11 @@ export enum ActionTypes {
   UNREGISTER = "UNREGISTER",
   TAB_TO_PREVIOUS = "TAB_TO_PREVIOUS",
   TAB_TO_NEXT = "TAB_TO_NEXT",
-  CLICKED = "CLICKED"
+  TAB_TO_PREVIOUS_ROW = "TAB_TO_PREVIOUS_ROW",
+  TAB_TO_NEXT_ROW = "TAB_TO_NEXT_ROW",
+  CLICKED = "CLICKED",
+  ENTER = "ENTER",
+  ESCAPE = "ESCAPE",
 }
 
 type Action =
@@ -41,7 +45,23 @@ type Action =
       payload: { id: TabStop["id"] };
     }
   | {
+      type: ActionTypes.TAB_TO_PREVIOUS_ROW;
+      payload: { id: TabStop["id"] };
+    }
+  | {
+      type: ActionTypes.TAB_TO_NEXT_ROW;
+      payload: { id: TabStop["id"] };
+    }
+  | {
       type: ActionTypes.CLICKED;
+      payload: { id: TabStop["id"] };
+    }
+  | {
+      type: ActionTypes.ENTER;
+      payload: { id: TabStop["id"] };
+    }
+  | {
+      type: ActionTypes.ESCAPE;
       payload: { id: TabStop["id"] };
     };
 
@@ -53,7 +73,7 @@ function reducer(state: State, action: Action): State {
         return {
           ...state,
           selectedId: newTabStop.id,
-          tabStops: [newTabStop]
+          tabStops: [newTabStop],
         };
       }
       const index = findIndex(
@@ -78,8 +98,8 @@ function reducer(state: State, action: Action): State {
         tabStops: [
           ...state.tabStops.slice(0, indexAfter),
           newTabStop,
-          ...state.tabStops.slice(indexAfter)
-        ]
+          ...state.tabStops.slice(indexAfter),
+        ],
       };
     }
     case ActionTypes.UNREGISTER: {
@@ -97,7 +117,7 @@ function reducer(state: State, action: Action): State {
               ? null
               : tabStops[0].id
             : state.selectedId,
-        tabStops
+        tabStops,
       };
     }
     case ActionTypes.TAB_TO_PREVIOUS:
@@ -116,17 +136,57 @@ function reducer(state: State, action: Action): State {
           : index >= state.tabStops.length - 1
           ? 0
           : index + 1;
+      console.log("newIndex", newIndex);
       return {
         ...state,
         lastActionOrigin: "keyboard",
-        selectedId: state.tabStops[newIndex].id
+        selectedId: state.tabStops[newIndex].id,
+      };
+    }
+    case ActionTypes.TAB_TO_PREVIOUS_ROW:
+    case ActionTypes.TAB_TO_NEXT_ROW: {
+      const id = action.payload.id;
+      const index = findIndex(state.tabStops, tabStop => tabStop.id === id);
+      if (index === -1) {
+        warning(false, `${id} tab stop not registered`);
+        return state;
+      }
+      const newIndex =
+        action.type === ActionTypes.TAB_TO_PREVIOUS_ROW
+          ? index <= 0
+            ? state.tabStops.length - 1 - 5
+            : Math.max(index - 5, 0)
+          : index >= state.tabStops.length - 1
+          ? 0
+          : Math.min(index + 5, state.tabStops.length - 1);
+      console.log("newIndex", newIndex);
+      return {
+        ...state,
+        lastActionOrigin: "keyboard",
+        selectedId: state.tabStops[newIndex].id,
       };
     }
     case ActionTypes.CLICKED: {
       return {
         ...state,
         lastActionOrigin: "mouse",
-        selectedId: action.payload.id
+        selectedId: action.payload.id,
+      };
+    }
+    case ActionTypes.ENTER: {
+      console.log("Pressed Enter");
+      return {
+        ...state,
+        lastActionOrigin: "keyboard",
+        selectedId: action.payload.id,
+      };
+    }
+    case ActionTypes.ESCAPE: {
+      console.log("Pressed Escape");
+      return {
+        ...state,
+        lastActionOrigin: "keyboard",
+        selectedId: action.payload.id,
       };
     }
     default:
@@ -143,9 +203,9 @@ export const RovingTabIndexContext = React.createContext<Context>({
   state: {
     selectedId: null,
     lastActionOrigin: "mouse",
-    tabStops: []
+    tabStops: [],
   },
-  dispatch: () => {}
+  dispatch: () => {},
 });
 
 type Props = {
@@ -156,13 +216,13 @@ const Provider = ({ children }: Props) => {
   const [state, dispatch] = React.useReducer(reducer, {
     selectedId: null,
     lastActionOrigin: "mouse",
-    tabStops: []
+    tabStops: [],
   });
 
   const context = React.useMemo<Context>(
     () => ({
       state,
-      dispatch
+      dispatch,
     }),
     [state]
   );

@@ -37,12 +37,12 @@ export default function useRovingTabIndex(
     }
     context.dispatch({
       type: ActionTypes.REGISTER,
-      payload: { id: tabIndexId.current, domElementRef }
+      payload: { id: tabIndexId.current, domElementRef },
     });
     return () => {
       context.dispatch({
         type: ActionTypes.UNREGISTER,
-        payload: { id: tabIndexId.current }
+        payload: { id: tabIndexId.current },
       });
     };
   }, [disabled]);
@@ -51,13 +51,37 @@ export default function useRovingTabIndex(
     if (event.key === "ArrowLeft") {
       context.dispatch({
         type: ActionTypes.TAB_TO_PREVIOUS,
-        payload: { id: tabIndexId.current }
+        payload: { id: tabIndexId.current },
       });
       event.preventDefault();
     } else if (event.key === "ArrowRight") {
       context.dispatch({
         type: ActionTypes.TAB_TO_NEXT,
-        payload: { id: tabIndexId.current }
+        payload: { id: tabIndexId.current },
+      });
+      event.preventDefault();
+    } else if (event.key === "ArrowDown") {
+      context.dispatch({
+        type: ActionTypes.TAB_TO_NEXT_ROW,
+        payload: { id: tabIndexId.current },
+      });
+      event.preventDefault();
+    } else if (event.key === "ArrowUp") {
+      context.dispatch({
+        type: ActionTypes.TAB_TO_PREVIOUS_ROW,
+        payload: { id: tabIndexId.current },
+      });
+      event.preventDefault();
+    } else if (event.key === "Enter") {
+      context.dispatch({
+        type: ActionTypes.ENTER,
+        payload: { id: tabIndexId.current },
+      });
+      event.preventDefault();
+    } else if (event.key === "Escape") {
+      context.dispatch({
+        type: ActionTypes.ESCAPE,
+        payload: { id: tabIndexId.current },
       });
       event.preventDefault();
     }
@@ -66,7 +90,7 @@ export default function useRovingTabIndex(
   const handleClick = React.useCallback(() => {
     context.dispatch({
       type: ActionTypes.CLICKED,
-      payload: { id: tabIndexId.current }
+      payload: { id: tabIndexId.current },
     });
   }, []);
 
